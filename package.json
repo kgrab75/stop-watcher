@@ -1,0 +1,58 @@
+{
+  "name": "@kgrab75/stop-watcher",
+  "version": "1.0.0",
+  "description": "Estimated times of upcoming stops",
+  "scripts": {
+    "build": "tsup",
+    "format": "prettier --write .",
+    "check-format": "prettier --check .",
+    "check-exports": "attw --pack . --ignore-rules=cjs-resolves-to-esm",
+    "lint": "tsc",
+    "test": "vitest run",
+    "dev": "vitest",
+    "prepublishOnly": "npm run ci",
+    "local-release": "changeset version && changeset publish",
+    "ci": "npm run build && npm run check-format && npm run check-exports && npm run lint"
+  },
+  "main": "dist/StopWatcher.js",
+  "exports": {
+    "./package.json": "./package.json",
+    ".": {
+      "import": "./dist/StopWatcher.js",
+      "default": "./dist/StopWatcher.cjs"
+    }
+  },
+  "keywords": [
+    "RATP",
+    "métro",
+    "bus",
+    "tram",
+    "Paris",
+    "PRIM",
+    "Ile-de-France Mobilités",
+    "stop",
+    "transport"
+  ],
+  "homepage": "https://github.com/kgrab75/stop-watcher",
+  "bugs": {
+    "url": "https://github.com/kgrab75/stop-watcher/issues"
+  },
+  "author": "Kevin GRABINER <kgrabiner75@gmail.com>",
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/kgrab75/stop-watcher.git"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "devDependencies": {
+    "@arethetypeswrong/cli": "^0.16.4",
+    "@changesets/cli": "^2.27.8",
+    "prettier": "^3.3.3",
+    "tsup": "^8.3.0",
+    "typescript": "^5.6.2",
+    "vitest": "^2.1.1"
+  }
+}
