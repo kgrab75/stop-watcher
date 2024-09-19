@@ -1,5 +1,11 @@
 # stop-watcher
 
+## 1.0.1
+
+### Patch Changes
+
+- 9093ad2: First version
+
 ## 1.0.3
 
 ### Patch Changes
