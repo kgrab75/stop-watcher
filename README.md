@@ -1,7 +1,3 @@
-Here is the documentation for your NPM package, written in English and formatted in Markdown:
-
----
-
 # StopWatcher NPM Package
 
 ## Overview
