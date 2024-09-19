@@ -1,5 +1,11 @@
 # stop-watcher
 
+## 1.0.5
+
+### Patch Changes
+
+- e8d7f15: fix readme
+
 ## 1.0.4
 
 ### Patch Changes
