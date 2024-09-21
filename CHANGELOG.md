@@ -1,5 +1,11 @@
 # stop-watcher
 
+## 1.0.6
+
+### Patch Changes
+
+- 4961c9c: export NextStopInfo
+
 ## 1.0.5
 
 ### Patch Changes
