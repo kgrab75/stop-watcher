@@ -16,7 +16,7 @@ interface LineInfo {
   transport: string;
 }
 
-interface NextStopInfo {
+export interface NextStopInfo {
   direction: string;
   stop: string;
   nextStops: NextStop[];
