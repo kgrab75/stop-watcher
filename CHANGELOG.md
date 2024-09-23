@@ -1,5 +1,11 @@
 # stop-watcher
 
+## 1.0.7
+
+### Patch Changes
+
+- 249099d: add textColor to lineInfo
+
 ## 1.0.6
 
 ### Patch Changes
