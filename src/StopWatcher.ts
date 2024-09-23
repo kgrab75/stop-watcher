@@ -13,6 +13,7 @@ type NextStop = {
 interface LineInfo {
   name: string;
   color: string;
+  textColor: string;
   transport: string;
 }
 
@@ -87,14 +88,15 @@ class StopWatcher {
       const {
         name_line: name,
         colourweb_hexa: color,
+        textcolourweb_hexa: textColor,
         transportmode: transport,
       } = lineRecord.fields;
 
-      this.lineInfoCache.set(lineId, { name, color, transport });
-      return { name, color, transport };
+      this.lineInfoCache.set(lineId, { name, color, textColor, transport });
+      return { name, color, textColor, transport };
     } catch (error) {
       console.error('Erreur lors de la récupération des données:', error);
-      return { name: '', color: '', transport: '' };
+      return { name: '', color: '', textColor: '', transport: '' };
     }
   }
 

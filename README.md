@@ -88,6 +88,7 @@ console.log(nextStops);
     "lineInfo": {
       "name": "8",
       "color": "d282be",
+      "textColor": "000000",
       "transport": "metro"
     }
   },
@@ -108,6 +109,7 @@ console.log(nextStops);
     "lineInfo": {
       "name": "8",
       "color": "d282be",
+      "textColor": "000000",
       "transport": "metro"
     }
   }
@@ -136,7 +138,7 @@ In each of these examples, the `getNextStops` method returns a `Promise<NextStop
 
 ### getLineInfo(lineId: string)
 
-Fetches information about a specific line, including the name, color, and transport mode.
+Fetches information about a specific line, including the name, color, textColor, and transport mode.
 
 ```typescript
 const lineInfo = await stopWatcher.getLineInfo('lineId');
@@ -146,6 +148,7 @@ Returns a `Promise<LineInfo>` containing:
 
 - `name` (string): Line name.
 - `color` (string): Hex color code for the line.
+- `textColor` (string): Hex color code for the text.
 - `transport` (string): The mode of transport (Bus, Metro, Tramway, etc.).
 
 ### getNextStops(query: string, mode?: Mode, lineName?: string)
@@ -198,6 +201,7 @@ Contains information about the transport line.
 type LineInfo = {
   name: string;
   color: string;
+  textColor: string;
   transport: string;
 };
 ```
