@@ -1,5 +1,11 @@
 # stop-watcher
 
+## 2.0.0
+
+### Major Changes
+
+- 6f557fb: Big changes. See README
+
 ## 1.0.7
 
 ### Patch Changes
