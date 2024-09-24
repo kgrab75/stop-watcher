@@ -1,5 +1,11 @@
 # stop-watcher
 
+## 2.0.1
+
+### Patch Changes
+
+- 4feeb3b: fix when query return multiple stop.
+
 ## 2.0.0
 
 ### Major Changes
