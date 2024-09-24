@@ -206,21 +206,22 @@ class StopWatcher {
 
     for (const stopLine of stopLines) {
       const { stopName, lineId } = stopLine;
+      const stopSchedulesKey = `${lineId}-${stopName}`;
 
       const monitoredStopVisits = await primAPI.getStopMonitoringVisits(
         stopLine,
         mode,
       );
 
-      if (!stopSchedules.has(lineId)) {
-        stopSchedules.set(lineId, {
+      if (!stopSchedules.has(stopSchedulesKey)) {
+        stopSchedules.set(stopSchedulesKey, {
           stop: stopName,
           line: await this.getLine(lineId),
           directions: [],
         });
       }
 
-      const stopSchedule = stopSchedules.get(lineId);
+      const stopSchedule = stopSchedules.get(stopSchedulesKey);
       if (stopSchedule === undefined) {
         throw new Error('error stop undefined');
       }
