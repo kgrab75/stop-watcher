@@ -5,23 +5,27 @@ import { DatasetAPI } from './resources/datasetAPI';
 import { PrimAPI } from './resources/primAPI';
 import { getRelativeTime, isValidDate } from './utils/date';
 
-type NextStop = {
-  destination: string;
-  next: Date | string;
-};
-
-interface LineInfo {
+interface Line {
   name: string;
   color: string;
   textColor: string;
-  transport: string;
+  mode?: Mode;
 }
 
-export interface NextStopInfo {
-  direction: string;
+interface Departure {
+  destination: string;
+  next: Date | string;
+}
+
+interface DirectionSchedule {
+  name: string;
+  upcomingDepartures: Departure[];
+}
+
+interface StopSchedule {
   stop: string;
-  nextStops: NextStop[];
-  lineInfo: LineInfo;
+  line: Line;
+  directions: DirectionSchedule[];
 }
 
 class StopWatcher {
@@ -31,7 +35,7 @@ class StopWatcher {
     METRO: 'Metro',
     TRAM: 'Tramway',
     RER: 'RapidTransit',
-    TER: 'LocalTrain',
+    TRANSILIEN: 'LocalTrain',
   } as const;
 
   private readonly apiKey: string;
@@ -40,7 +44,7 @@ class StopWatcher {
   private readonly exactMatch: boolean;
   private readonly municipalityName: string;
 
-  private lineInfoCache = new Map<string, LineInfo>();
+  private lineCache = new Map<string, Line>();
 
   private datasetAPI!: DatasetAPI;
 
@@ -76,39 +80,56 @@ class StopWatcher {
     }
   }
 
-  async getLineInfo(lineId: string): Promise<LineInfo> {
+  async getLine(lineId: string): Promise<Line> {
+    const transpportMapping = new Map<string, Mode>([
+      ['bus', StopWatcher.MODE.BUS],
+      ['metro', StopWatcher.MODE.METRO],
+      ['tram', StopWatcher.MODE.TRAM],
+      ['rail-local', StopWatcher.MODE.RER],
+      ['rail-suburbanRailway', StopWatcher.MODE.TRANSILIEN],
+    ]);
     try {
-      const cachedLineInfo = this.lineInfoCache.get(lineId);
-      if (cachedLineInfo) {
-        return cachedLineInfo;
+      const cachedLine = this.lineCache.get(lineId);
+      if (cachedLine) {
+        return cachedLine;
       }
 
       const lineRecord = await this.datasetAPI.getLineRecord(lineId);
+      const fields = lineRecord.fields;
 
       const {
         name_line: name,
         colourweb_hexa: color,
         textcolourweb_hexa: textColor,
-        transportmode: transport,
-      } = lineRecord.fields;
+      } = fields;
 
-      this.lineInfoCache.set(lineId, { name, color, textColor, transport });
-      return { name, color, textColor, transport };
+      const line = {
+        name,
+        color,
+        textColor,
+        mode: transpportMapping.get(
+          fields.transportmode === 'rail'
+            ? `${fields.transportmode}-${fields.transportsubmode}`
+            : fields.transportmode,
+        ),
+      };
+
+      this.lineCache.set(lineId, line);
+      return line;
     } catch (error) {
       console.error('Erreur lors de la récupération des données:', error);
-      return { name: '', color: '', textColor: '', transport: '' };
+      return { name: '', color: '', textColor: '', mode: undefined };
     }
   }
 
   private async extractStopsByDestination(
     monitoredStopVisits: MonitoredStopVisit[],
-    stopLine: StopLine,
-  ): Promise<NextStopInfo[]> {
+  ): Promise<DirectionSchedule[]> {
     const transform = this.asDate
-      ? (date: string) => date
+      ? (date: string) => new Date(date)
       : (date: string) => getRelativeTime(date, this.locale);
 
-    const groupedStops = new Map<string, NextStopInfo>();
+    const directionSchedules = new Map<string, DirectionSchedule>();
 
     for (const visit of monitoredStopVisits) {
       const monitoredVehicleJourney = visit.MonitoredVehicleJourney;
@@ -125,39 +146,50 @@ class StopWatcher {
         continue;
       }
 
-      const direction =
+      const directionName =
         monitoredVehicleJourney.DirectionName[0]?.value || 'unknown';
 
       const destination =
-        monitoredCall.DestinationDisplay[0]?.value || direction;
+        monitoredCall.DestinationDisplay[0]?.value || directionName;
+
       const stop = monitoredCall.StopPointName[0]?.value || 'unknown';
 
       if (stop === destination) {
         continue;
       }
 
-      if (!groupedStops.has(direction)) {
-        groupedStops.set(direction, {
-          direction,
-          stop,
-          nextStops: [],
-          lineInfo: await this.getLineInfo(stopLine.lineId),
+      if (!directionSchedules.has(directionName)) {
+        directionSchedules.set(directionName, {
+          name: directionName,
+          upcomingDepartures: [],
         });
       }
+      const directionSchedule = directionSchedules.get(directionName);
+      if (directionSchedule === undefined) {
+        throw new Error('error directionSchedule undefined');
+      }
 
-      groupedStops
-        .get(direction)
-        ?.nextStops.push({ destination, next: transform(next) });
+      directionSchedule.upcomingDepartures.push({
+        destination,
+        next: transform(next),
+      });
     }
 
-    return Array.from(groupedStops.values());
+    return (
+      Array.from(directionSchedules.values()) || [
+        {
+          name: 'unknown',
+          upcomingDepartures: [],
+        },
+      ]
+    );
   }
 
-  async getNextStops(
+  async getStopSchedules(
     query: string,
     mode?: Mode | null,
     lineName?: string | null,
-  ): Promise<NextStopInfo[]> {
+  ): Promise<StopSchedule[]> {
     this.datasetAPI = new DatasetAPI({
       exactMatch: this.exactMatch,
       municipalityName: this.municipalityName,
@@ -170,35 +202,37 @@ class StopWatcher {
 
     const primAPI = new PrimAPI({ apiKey: this.apiKey });
 
-    const nextStops = await Promise.all(
-      stopLines.map(async (stopLine) => {
-        const monitoredStopVisits = await primAPI.getStopMonitoringVisits(
-          stopLine,
-          mode,
-        );
+    const stopSchedules = new Map<string, StopSchedule>();
 
-        const monitoredStopVisit = monitoredStopVisits[0];
-        if (monitoredStopVisit === undefined) {
-          return [
-            {
-              destination: 'unknown',
-              direction: 'unknown',
-              stop: stopLine.stopName,
-              nextStops: [],
-              lineInfo: await this.getLineInfo(stopLine.lineId),
-            },
-          ];
-        }
+    for (const stopLine of stopLines) {
+      const { stopName, lineId } = stopLine;
 
-        return await this.extractStopsByDestination(
-          monitoredStopVisits,
-          stopLine,
-        );
-      }),
-    );
+      const monitoredStopVisits = await primAPI.getStopMonitoringVisits(
+        stopLine,
+        mode,
+      );
 
-    return nextStops.flat();
+      if (!stopSchedules.has(lineId)) {
+        stopSchedules.set(lineId, {
+          stop: stopName,
+          line: await this.getLine(lineId),
+          directions: [],
+        });
+      }
+
+      const stopSchedule = stopSchedules.get(lineId);
+      if (stopSchedule === undefined) {
+        throw new Error('error stop undefined');
+      }
+
+      const directionSchedule =
+        await this.extractStopsByDestination(monitoredStopVisits);
+      stopSchedule.directions.push(...directionSchedule);
+    }
+
+    return Array.from(stopSchedules.values());
   }
 }
 
 export { StopWatcher };
+export type { Mode, StopSchedule };

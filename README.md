@@ -60,58 +60,53 @@ const stopWatcher = new StopWatcher({
   apiKey,
 });
 
-const nextStops = stopWatcher.getNextStops(
+const stopSchedules = stopWatcher.getStopSchedules(
   'Michel Bizot',
   StopWatcher.MODE.METRO,
   '8',
 );
 
-console.log(nextStops);
+console.log(stopSchedules);
 ```
 
 ```json
 [
   {
-    "direction": "Pointe du Lac",
     "stop": "Michel Bizot",
-    "nextStops": [
-      {
-        "destination": "Créteil-Pointe du Lac",
-        "next": "dans 3 min"
-      },
-      {
-        "destination": "Créteil-Pointe du Lac",
-        "next": "dans 6 min"
-      }
-      //...
-    ],
     "lineInfo": {
       "name": "8",
       "color": "d282be",
       "textColor": "000000",
-      "transport": "metro"
-    }
-  },
-  {
-    "direction": "Balard",
-    "stop": "Michel Bizot",
-    "nextStops": [
+      "mode": "Metro"
+    },
+    "directions": [
       {
-        "destination": "Balard",
-        "next": "dans 2 min"
+        "name": "Pointe du Lac",
+        "upcomingDepartures": [
+          {
+            "destination": "Créteil-Pointe du Lac",
+            "next": "dans 3 min"
+          },
+          {
+            "destination": "Créteil-Pointe du Lac",
+            "next": "dans 7 min"
+          }
+        ]
       },
       {
-        "destination": "Balard",
-        "next": "dans 6 min"
+        "name": "Balard",
+        "upcomingDepartures": [
+          {
+            "destination": "Balard",
+            "next": "dans 2 min"
+          },
+          {
+            "destination": "Balard",
+            "next": "dans 7 min"
+          }
+        ]
       }
-      //...
-    ],
-    "lineInfo": {
-      "name": "8",
-      "color": "d282be",
-      "textColor": "000000",
-      "transport": "metro"
-    }
+    ]
   }
 ]
 ```
@@ -121,7 +116,7 @@ console.log(nextStops);
 This example retrieves the next stops for the **RER A** line at the **Nation** station.
 
 ```typescript
-await stopWatcher.getNextStops('Nation', StopWatcher.MODE.RER, 'A');
+await stopWatcher.getStopSchedules('Nation', StopWatcher.MODE.RER, 'A');
 ```
 
 ### 3. Get Bus 46 stops at Sidi Brahim
@@ -129,34 +124,38 @@ await stopWatcher.getNextStops('Nation', StopWatcher.MODE.RER, 'A');
 This example retrieves the next stops for the **Bus 46** line at **Sidi Brahim**.
 
 ```typescript
-await stopWatcher.getNextStops('Sidi Brahim', StopWatcher.MODE.BUS, '46');
+await stopWatcher.getStopSchedules('Sidi Brahim', StopWatcher.MODE.BUS, '46');
 ```
 
-In each of these examples, the `getNextStops` method returns a `Promise<NextStopInfo[]>`, where each element contains details about the next stops for the specified query, transport mode, and line.
+In each of these examples, the `getStopSchedules` method returns a `Promise<StopSchedule[]>`, where each element contains details about the next stops for the specified query, transport mode, and line.
 
 ## Methods
 
-### getLineInfo(lineId: string)
+### getLine(lineId: string)
 
 Fetches information about a specific line, including the name, color, textColor, and transport mode.
 
 ```typescript
-const lineInfo = await stopWatcher.getLineInfo('lineId');
+const line = await stopWatcher.getLine('lineId');
 ```
 
-Returns a `Promise<LineInfo>` containing:
+Returns a `Promise<Line>` containing:
 
 - `name` (string): Line name.
 - `color` (string): Hex color code for the line.
 - `textColor` (string): Hex color code for the text.
-- `transport` (string): The mode of transport (Bus, Metro, Tramway, etc.).
+- `mode` (Mode): The mode of transport (Bus, Metro, Tramway, etc.).
 
-### getNextStops(query: string, mode?: Mode, lineName?: string)
+### getStopSchedules(query: string, mode?: Mode, lineName?: string)
 
 Retrieves the next stops for a given query, mode, or line name.
 
 ```typescript
-const nextStops = await stopWatcher.getNextStops('stopName', 'Bus', 'lineName');
+const stopSchedules = await stopWatcher.getStopSchedules(
+  'stopName',
+  'Bus',
+  'lineName',
+);
 ```
 
 Returns a `Promise<NextStopInfo[]>` with details about the next stops, including:
@@ -168,7 +167,7 @@ Returns a `Promise<NextStopInfo[]>` with details about the next stops, including
 
 ## Types
 
-### StopWatcherOptions
+### `StopWatcherOptions`
 
 The options object for initializing `StopWatcher`.
 
@@ -182,42 +181,67 @@ type StopWatcherOptions = {
 };
 ```
 
-### NextStop
+### `Line`
 
-Represents the next stop details.
-
-```typescript
-type NextStop = {
-  destination: string;
-  next: Date | string;
-};
-```
-
-### LineInfo
-
-Contains information about the transport line.
+Represents a transportation line.
 
 ```typescript
-type LineInfo = {
+interface Line {
   name: string;
   color: string;
   textColor: string;
-  transport: string;
-};
-```
-
-### NextStopInfo
-
-Represents information about the next stops for a specific direction.
-
-```typescript
-interface NextStopInfo {
-  direction: string;
-  stop: string;
-  nextStops: NextStop[];
-  lineInfo: LineInfo;
+  mode?: Mode;
 }
 ```
+
+- **name**: The name of the line.
+- **color**: The color code of the line (in hexadecimal).
+- **textColor**: The text color code (in hexadecimal) for better contrast.
+- **mode**: The mode of transportation, which can be a bus, metro, tram, or train (optional).
+
+### `Departure`
+
+Represents a departure for a specific destination.
+
+```typescript
+interface Departure {
+  destination: string;
+  next: Date | string;
+}
+```
+
+- **destination**: The name of the destination stop.
+- **next**: The time of the next departure.
+
+### `DirectionSchedule`
+
+Represents the schedule of departures in a specific direction.
+
+```typescript
+interface DirectionSchedule {
+  name: string;
+  upcomingDepartures: Departure[];
+}
+```
+
+- **name**: The name of the direction (e.g., the name of the terminal station).
+- **upcomingDepartures**: A list of upcoming departures (`Departure[]`) for this direction.
+
+### `StopSchedule`
+
+Represents the schedule of a particular stop, including its lines and departure directions.
+
+```typescript
+interface StopSchedule {
+  stop: string;
+  line: Line;
+  directions: DirectionSchedule[];
+}
+```
+
+- **stop**: The name of the stop.
+- **line**: The `Line` information of the transportation serving the stop.
+- **directions**: A list of `DirectionSchedule[]` for each direction served by the stop.
 
 ## Constants
 
@@ -231,16 +255,6 @@ StopWatcher.MODE = {
   METRO: 'Metro',
   TRAM: 'Tramway',
   RER: 'RapidTransit',
-  TER: 'LocalTrain',
+  TRANSILIEN: 'LocalTrain',
 };
-```
-
-## Error Handling
-
-If `apiKey` is not provided during initialization, an error is thrown:
-
-```typescript
-throw new Error(
-  'apiKey is mandatory! You can generate this apikey by signing up here: https://prim.iledefrance-mobilites.fr/',
-);
 ```

@@ -3,6 +3,7 @@ export interface LineRecord {
   fields: {
     name_line: string;
     transportmode: string;
+    transportsubmode: string;
     textcolourweb_hexa: string;
     colourweb_hexa: string;
   };

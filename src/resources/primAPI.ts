@@ -28,7 +28,7 @@ export class PrimAPI {
     mode?: Mode | null,
   ) {
     const params =
-      mode !== StopWatcher.MODE.RER && mode !== StopWatcher.MODE.TER
+      mode !== StopWatcher.MODE.RER && mode !== StopWatcher.MODE.TRANSILIEN
         ? {
             MonitoringRef: `STIF:StopPoint:Q:${stopId}:`,
             LineRef: `STIF:Line::${lineId}:`,
