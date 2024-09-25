@@ -27,18 +27,18 @@ export class PrimAPI {
     lineId: string,
     mode?: Mode | null,
   ) {
-    const params =
-      mode !== StopWatcher.MODE.RER && mode !== StopWatcher.MODE.TRANSILIEN
-        ? {
-            MonitoringRef: `STIF:StopPoint:Q:${stopId}:`,
-            LineRef: `STIF:Line::${lineId}:`,
-          }
-        : {
-            MonitoringRef: `STIF:StopArea:SP:${stopId}:`,
-            LineRef: `STIF:Line::${lineId}:`,
-          };
+    const isSuburbanRail =
+      mode &&
+      [
+        StopWatcher.MODE.RER,
+        StopWatcher.MODE.TRANSILIEN,
+        StopWatcher.MODE.TER,
+      ].includes(mode as any);
 
-    return params;
+    return {
+      MonitoringRef: `STIF:${isSuburbanRail ? 'StopArea:SP' : 'StopPoint:Q'}:${stopId}:`,
+      LineRef: `STIF:Line::${lineId}:`,
+    };
   }
 
   async getStopMonitoringVisits(

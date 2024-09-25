@@ -19,6 +19,7 @@ export class DatasetAPI {
 
   private readonly exactMatch: boolean;
   private readonly municipalityName: string;
+  private readonly omitModeLimit: number;
 
   private readonly query: string | undefined;
   private readonly mode?: Mode | null;
@@ -29,6 +30,7 @@ export class DatasetAPI {
 
     this.exactMatch = options.exactMatch || false;
     this.municipalityName = options.municipalityName || 'Paris';
+    this.omitModeLimit = options.omitModeLimit || 6;
 
     this.query = options.query;
     this.mode = options.mode;
@@ -40,7 +42,9 @@ export class DatasetAPI {
       ? { 'refine.stop_name': this.query }
       : { q: this.query };
 
-    const mode = this.mode ? { 'refine.mode': this.mode } : {};
+    const mode = this.mode
+      ? { 'refine.mode': this.mode }
+      : { rows: this.omitModeLimit };
 
     const lineName = this.lineName
       ? { 'refine.route_long_name': this.lineName }

@@ -35,6 +35,7 @@ const stopWatcher = new StopWatcher({
   asDate: true, // Optional: defaults to false
   exactMatch: true, // Optional: defaults to false
   municipalityName: 'Paris', // Optional: defaults to 'Paris'
+  omitModeLimit: 6, // Optional: defaults to 6
 });
 ```
 
@@ -45,6 +46,7 @@ const stopWatcher = new StopWatcher({
 - `asDate` (boolean): Optional. If `true`, dates are returned as `Date` objects. Default is `false`.
 - `exactMatch` (boolean): Optional. If `true`, matches stops exactly. Default is `false`.
 - `municipalityName` (string): Optional. The name of the municipality to search for stops. Default is `'Paris'`.
+- `omitModeLimit` (number): Optional. When the `mode` parameter is omitted, this limit is used to restrict the number of results, ensuring the response remains concise and manageable. Default is `6`.
 
 ## Examples
 

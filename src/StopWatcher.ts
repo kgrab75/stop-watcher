@@ -30,12 +30,14 @@ interface StopSchedule {
 
 class StopWatcher {
   IDFM_AUTH_URL: string = 'https://prim.iledefrance-mobilites.fr/';
+
   static MODE = {
     BUS: 'Bus',
     METRO: 'Metro',
     TRAM: 'Tramway',
     RER: 'RapidTransit',
     TRANSILIEN: 'LocalTrain',
+    TER: 'regionalRail',
   } as const;
 
   private readonly apiKey: string;
@@ -43,6 +45,7 @@ class StopWatcher {
   private readonly asDate: boolean;
   private readonly exactMatch: boolean;
   private readonly municipalityName: string;
+  private readonly omitModeLimit: number;
 
   private lineCache = new Map<string, Line>();
 
@@ -59,6 +62,7 @@ class StopWatcher {
     this.asDate = options.asDate || false;
     this.exactMatch = options.exactMatch || false;
     this.municipalityName = options.municipalityName || 'Paris';
+    this.omitModeLimit = options.omitModeLimit || 6;
   }
 
   private async getStopLines(): Promise<StopLine[]> {
@@ -87,6 +91,7 @@ class StopWatcher {
       ['tram', StopWatcher.MODE.TRAM],
       ['rail-local', StopWatcher.MODE.RER],
       ['rail-suburbanRailway', StopWatcher.MODE.TRANSILIEN],
+      ['rail-regionalRail', StopWatcher.MODE.TER],
     ]);
     try {
       const cachedLine = this.lineCache.get(lineId);
@@ -193,6 +198,7 @@ class StopWatcher {
     this.datasetAPI = new DatasetAPI({
       exactMatch: this.exactMatch,
       municipalityName: this.municipalityName,
+      omitModeLimit: this.omitModeLimit,
       query,
       mode,
       lineName,

@@ -8,4 +8,5 @@ export interface StopWatcherOptions {
   exactMatch?: boolean;
   locale?: string;
   municipalityName?: string;
+  omitModeLimit?: number;
 }

@@ -10,6 +10,7 @@ export interface StopLine {
 export interface DatasetApiOptions {
   exactMatch?: boolean;
   municipalityName?: string;
+  omitModeLimit?: number;
   query: string;
   mode?: Mode | null;
   lineName?: string | null;
